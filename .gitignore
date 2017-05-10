@@ -3,3 +3,11 @@ build
 dist
 .vscode
 npm-debug.log
+STM32_test
+Backup
+*.mxproject
+*.lst
+*.s
+*.XRay
+*.bak
+*.uvoptx

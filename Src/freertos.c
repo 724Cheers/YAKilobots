@@ -183,11 +183,11 @@ void vLogToPcTask(void const * argument)
   MX_USB_DEVICE_Init();
 
   /* USER CODE BEGIN vLogToPcTask */
-	osEvent eventLogToPc;
   /* Infinite loop */
   for(;;)
   {
-		/* 从xQueueLogToPcHandle中Get�?要发送的日志 */
+		/* 从xQueueLogToPcHandle中Get�?要发送的日志 */		
+		osEvent eventLogToPc;
 		eventLogToPc = osMessageGet	(	xQueueLogToPcHandle, osWaitForever );
 		
 		/* 向xQueueDmaTxDataHandle中Put�?要�?�过DMA发�?�的数据 */
@@ -223,7 +223,16 @@ void vZigbeeHandlerTask(void const * argument)
 //		}
 //		consoleLog("Message: Zigbee Handler Task works well.\r\n");
 		#ifdef DEBUG
-    osDelay(1000);
+		Dma_Gatekeeper_Exchange_Data ZigbeeHandlerExData ={
+			Dma_Tx,
+			"Message: Zigbee Handler Task works well.\r\n"
+		};
+		if( osOK != osMessagePut ( xQueueLogToPcHandle, (uint32_t)&ZigbeeHandlerExData, osWaitForever ) ){
+			Error_Handler();
+		}
+		if( osEventTimeout != osDelay(1000) ){
+//			Error_Handler();
+		}
 		#endif
   }
   /* USER CODE END vZigbeeHandlerTask */
@@ -237,7 +246,16 @@ void vMagMeasureTask(void const * argument)
   for(;;)
   {
 		#ifdef DEBUG
-    osDelay(1000);
+		Dma_Gatekeeper_Exchange_Data ExData ={
+			Dma_Tx,
+			"Message: Mag Measure Task works well.\r\n"
+		};
+		if( osOK != osMessagePut ( xQueueLogToPcHandle, (uint32_t)&ExData, osWaitForever ) ){
+//			Error_Handler();
+		}
+		if( osEventTimeout != osDelay(1000) ){
+//			Error_Handler();
+		}
 		#endif
   }
   /* USER CODE END vMagMeasureTask */
@@ -248,31 +266,31 @@ void vTimerLogToPcCallback(void const * argument)
 {
   /* USER CODE BEGIN vTimerLogToPcCallback */
 	#ifdef DEBUG
-	Dma_Gatekeeper_Exchange_Data ExData ={
-		Dma_Tx,
-		"Message: Timer log to Pc callback works well.\r\n"
-	};
+//	Dma_Gatekeeper_Exchange_Data ExData ={
+//		Dma_Tx,
+//		"Message: Timer log to Pc callback works well.\r\n"
+//	};
 //	osMessagePut ( xQueueLogToPcHandle, (uint32_t)&ExData, 0 );
 
 //	osTimerStart	(	xTimerLogToPcHandle, 1000 );
-	
-	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-	if (xQueueSendFromISR(xQueueLogToPcHandle, &ExData, &xHigherPriorityTaskWoken) != pdTRUE) {
-//		return osErrorOS;
-	}
+//	
+//	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+//	if (xQueueSendFromISR(xQueueLogToPcHandle, &ExData, &xHigherPriorityTaskWoken) != pdTRUE) {
+////		return osErrorOS;
+//	}
 
-	/* xTimerStartFromISR() or xTimerResetFromISR() could be called here
-	as both cause the timer to re-calculate its expiry time.
-	xHigherPriorityTaskWoken was initialised to pdFALSE when it was
-	declared (in this function). */
-	if( xTimerResetFromISR( xTimerLogToPcHandle,
-													&xHigherPriorityTaskWoken ) != pdPASS )
-	{
-			/* The reset command was not executed successfully.  Take appropriate
-			action here. */
-	}
+//	/* xTimerStartFromISR() or xTimerResetFromISR() could be called here
+//	as both cause the timer to re-calculate its expiry time.
+//	xHigherPriorityTaskWoken was initialised to pdFALSE when it was
+//	declared (in this function). */
+//	if( xTimerResetFromISR( xTimerLogToPcHandle,
+//													&xHigherPriorityTaskWoken ) != pdPASS )
+//	{
+//			/* The reset command was not executed successfully.  Take appropriate
+//			action here. */
+//	}
 
-	/* Perform the rest of the key processing here. */
+//	/* Perform the rest of the key processing here. */
 
 	#endif
   /* USER CODE END vTimerLogToPcCallback */
