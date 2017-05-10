@@ -183,15 +183,15 @@ void vLogToPcTask(void const * argument)
   MX_USB_DEVICE_Init();
 
   /* USER CODE BEGIN vLogToPcTask */
+	osEvent eventLogToPc;
   /* Infinite loop */
   for(;;)
   {
 		/* 从xQueueLogToPcHandle中Get�?要发送的日志 */		
-		osEvent eventLogToPc;
 		eventLogToPc = osMessageGet	(	xQueueLogToPcHandle, osWaitForever );
 		
 		/* 向xQueueDmaTxDataHandle中Put�?要�?�过DMA发�?�的数据 */
-		if( osOK != osMessagePut ( xQueueDmaHandle, (uint32_t)eventLogToPc.value.p, osWaitForever ) ){
+		if( osOK != osMessagePut ( xQueueDmaHandle, (uint32_t)eventLogToPc.value.p, 0 ) ){
 //			Error_Handler();
 		}
 		/* 向xQueueLogToPcHandle中Put任务运行状�?? */
@@ -204,7 +204,7 @@ void vLogToPcTask(void const * argument)
 //		osMessagePut ( xQueueLogToPcHandle, (uint32_t)&ExData, osWaitForever );
 //		osDelay(1000);
 		#endif
-//		osThreadYield();
+		osThreadYield();
   }
   /* USER CODE END vLogToPcTask */
 }
@@ -227,13 +227,14 @@ void vZigbeeHandlerTask(void const * argument)
 			Dma_Tx,
 			"Message: Zigbee Handler Task works well.\r\n"
 		};
-		if( osOK != osMessagePut ( xQueueLogToPcHandle, (uint32_t)&ZigbeeHandlerExData, osWaitForever ) ){
+		if( osOK != osMessagePut ( xQueueLogToPcHandle, (uint32_t)&ZigbeeHandlerExData, 0 ) ){
 			Error_Handler();
 		}
-		if( osEventTimeout != osDelay(1000) ){
+		if( osEventTimeout != osDelay(900) ){
 //			Error_Handler();
 		}
 		#endif
+		osThreadYield();
   }
   /* USER CODE END vZigbeeHandlerTask */
 }
@@ -250,13 +251,14 @@ void vMagMeasureTask(void const * argument)
 			Dma_Tx,
 			"Message: Mag Measure Task works well.\r\n"
 		};
-		if( osOK != osMessagePut ( xQueueLogToPcHandle, (uint32_t)&ExData, osWaitForever ) ){
+		if( osOK != osMessagePut ( xQueueLogToPcHandle, (uint32_t)&ExData, 0 ) ){
 //			Error_Handler();
 		}
 		if( osEventTimeout != osDelay(1000) ){
 //			Error_Handler();
 		}
 		#endif
+		osThreadYield();
   }
   /* USER CODE END vMagMeasureTask */
 }

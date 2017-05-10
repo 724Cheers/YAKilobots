@@ -24,5 +24,6 @@ void vDmaGatekeeperTask(void const * argument){
 				}
 			}
 		}
+		osThreadYield();
 	}
 }
