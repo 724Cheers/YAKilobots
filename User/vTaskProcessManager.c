@@ -129,10 +129,10 @@ void vTaskProcessManager(void const * argument)
 		/* ---------------------------------------------------------------- */
 
 		/* ---------------------------------------------------------------- */
-		/* 放出令牌,开启测速 */
-		if (osOK != osMessagePut(xQueueRunTokenSpeedMeasureHandle, NULL, 500)){
-			Error_Handler(&xErrMsgFatalInternal);
-		}
+//		/* 放出令牌,开启测速 */
+//		if (osOK != osMessagePut(xQueueRunTokenSpeedMeasureHandle, NULL, 500)){
+//			Error_Handler(&xErrMsgFatalInternal);
+//		}
 		//		vTaskResume(vTaskSpeedMeasure);
 		/* 放出令牌,开启电机 */
 		if (osOK != osMessagePut(xQueueRunTokenMotorControlHandle, NULL, 500)){
@@ -143,7 +143,7 @@ void vTaskProcessManager(void const * argument)
 		xEventMotorControlData = osMessageGet(xQueueMotorControlDataHandle, osWaitForever);
 		/* 等待执行完毕 */
 		xQueueReset(xQueueRunTokenMotorControlHandle);
-		xQueueReset(xQueueRunTokenSpeedMeasureHandle);
+//		xQueueReset(xQueueRunTokenSpeedMeasureHandle);
 		/* 拷贝数据 */
 		memcpy((void *)&xCurrentMotorControlData, xEventMotorControlData.value.p, sizeof(Motor_Control_Data));
 		//		/* 挂起电机、测速 */

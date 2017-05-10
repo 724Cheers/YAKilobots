@@ -48,10 +48,6 @@
 #define TllDownTx_GPIO_Port GPIOA
 #define TllDownRx_Pin GPIO_PIN_10
 #define TllDownRx_GPIO_Port GPIOA
-#define Mpu9xScl_Pin GPIO_PIN_8
-#define Mpu9xScl_GPIO_Port GPIOB
-#define Mpu9xSda_Pin GPIO_PIN_9
-#define Mpu9xSda_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

@@ -2,7 +2,7 @@
 #define __vTaskDistMeasure_H
 
 #include "commonFuntion.h"
-#define _DebugTaskDistMeasure
+//#define _DebugTaskDistMeasure
 
 #pragma pack(1)
 typedef struct{

@@ -2,7 +2,7 @@
 #define __vTaskMotorControl_H
 
 #include "commonFuntion.h"
-#define _DebugTaskMotorControl
+//#define _DebugTaskMotorControl
 
 #pragma pack(1)
 typedef struct{
