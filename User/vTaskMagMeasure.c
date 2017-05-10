@@ -3,8 +3,6 @@
 #include "usart.h"
 #include "commonFuntion.h"
 #include "vTaskDmaGatekeeper.h"
-#include "inv_mpu.h"
-#include "inv_mpu_dmp_motion_driver.h"
 
 /* Queue */
 extern osMessageQId xQueueLogToPcHandle;
@@ -25,15 +23,6 @@ void vTaskMagMeasure(void const * argument)
 #pragma pack(1)
 	static Mag_Measure_Data xCurrentMagMeasureData = {0};
 #pragma pack()
-	mpu_init();
-	mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL);
-	mpu_configure_fifo(INV_XYZ_GYRO | INV_XYZ_ACCEL);mpu_set_sample_rate(DEFAULT_MPU_HZ);
-	dmp_load_motion_driver_firmware();
-	dmp_set_orientation(inv_orientation_matrix_to_scalar(gyro_orientation));
-	dmp_enable_feature(hal.dmp_features);
-	dmp_set_fifo_rate(DEFAULT_MPU_HZ);                        
-	run_self_test();
-	mpu_set_dmp_state(1);
 	/* Infinite loop */
 	for (;;)
 	{

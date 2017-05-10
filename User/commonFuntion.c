@@ -5,6 +5,13 @@
 
 extern osMessageQId xQueueLogToPcHandle;
 
+#pragma import(__use_no_semihosting)  
+void _sys_exit(int x)  { x = x; }
+struct __FILE  {
+	int handle;
+};
+FILE __stdout;
+
 #ifdef __GNUC__
 /* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
 set to 'Yes') calls __io_putchar() */
@@ -12,13 +19,6 @@ set to 'Yes') calls __io_putchar() */
 #else
 #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
 #endif /* __GNUC__ */
-
-#pragma import(__use_no_semihosting)  
-void _sys_exit(int x)  { x = x; }
-struct __FILE  {
-	int handle;
-};
-FILE __stdout;
 
 /**
 * @brief  Retargets the C library printf function to the USART.

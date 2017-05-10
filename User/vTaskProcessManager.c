@@ -72,33 +72,44 @@ void vTaskProcessManager(void const * argument)
 	/* Infinite loop */
 	for (;;)
 	{
-		/* ---------------------------------------------- */
-		/* 放出令牌,开启磁力计任务 */
+		//		vTaskSuspend( vTaskMotorControl );
+		//		vTaskSuspend( vTaskDistMeasure );
+		//		vTaskSuspend( vTaskSpeedMeasure );
+		//		vTaskSuspend( vTaskMagMeasure );
+
+		/* ---------------------------------------------------------------- */
+		/* 放出令牌,开启磁力计 */
 		if (osOK != osMessagePut(xQueueRunTokenMagMeasureHandle, NULL, 500)){
 			Error_Handler(&xErrMsgFatalInternal);
 		}
+		//		vTaskResume(vTaskMagMeasure);
 		/* 等待数据 */
 		xEventMagMeasureData = osMessageGet(xQueueMagMeasureDataHandle, osWaitForever);
-		/* 清空令牌,停止磁力计任务 */
+		/* 清空令牌 */
 		xQueueReset(xQueueRunTokenMagMeasureHandle);
 		/* 拷贝数据 */
 		memcpy((void *)&xCurrentMagMeasureData, xEventMagMeasureData.value.p, sizeof(Mag_Measure_Data));
-		/* ---------------------------------------------- */
+		//		/* 挂起磁力计 */
+		//		vTaskSuspend( vTaskMagMeasure );
+		/* ---------------------------------------------------------------- */
 
-		/* ---------------------------------------------- */
-		/* 放出令牌,开启超声波任务 */
+		/* ---------------------------------------------------------------- */
+		/* 放出令牌,开启超声波 */
 		if (osOK != osMessagePut(xQueueRunTokenDistMeasureHandle, NULL, 500)){
 			Error_Handler(&xErrMsgFatalInternal);
 		}
+		//		vTaskResume(vTaskDistMeasure);
 		/* 等待数据 */
 		xEventDistMeasureData = osMessageGet(xQueueDistMeasureDataHandle, osWaitForever);
-		/* 清空令牌,停止超声波任务 */
+		/* 清空令牌 */
 		xQueueReset(xQueueRunTokenDistMeasureHandle);
 		/* 拷贝数据 */
 		memcpy((void *)&xCurrentDistMeasureData, xEventDistMeasureData.value.p, sizeof(Dist_Measure_Data));
-		/* ---------------------------------------------- */
+		//		/* 挂起超声波 */
+		//		vTaskSuspend( vTaskDistMeasure );
+		/* ---------------------------------------------------------------- */
 
-		/* ---------------------------------------------- */
+		/* ---------------------------------------------------------------- */
 		/* 处理接收到的它机数据 */
 		eventReceivedComData = osMessageGet(xQueueReceivedComDataHandle, 1000);	//??osWaitForever 不靠谱，有可能等不到
 		if (osEventMessage == eventReceivedComData.status){
@@ -110,30 +121,35 @@ void vTaskProcessManager(void const * argument)
 			osMessagePut(xQueueSendComDataHandle, (uint32_t)&xOneSendData, 0);
 #endif
 		}
-		/* ---------------------------------------------- */
+		/* ---------------------------------------------------------------- */
 
-		/* ---------------------------------------------- */
-		/* 控制策略,根据以上收集到的数据判断接下来动作 */
+		/* ---------------------------------------------------------------- */
+		/* 控制策略，根据以上收集到的数据判断接下来要怎么动 */
 		//add codes
-		/* ---------------------------------------------- */
+		/* ---------------------------------------------------------------- */
 
-		/* ---------------------------------------------- */
-		/* 放出令牌,开启测速任务 */
+		/* ---------------------------------------------------------------- */
+		/* 放出令牌,开启测速 */
 		if (osOK != osMessagePut(xQueueRunTokenSpeedMeasureHandle, NULL, 500)){
 			Error_Handler(&xErrMsgFatalInternal);
 		}
-		/* 放出令牌,开启电机任务 */
+		//		vTaskResume(vTaskSpeedMeasure);
+		/* 放出令牌,开启电机 */
 		if (osOK != osMessagePut(xQueueRunTokenMotorControlHandle, NULL, 500)){
 			Error_Handler(&xErrMsgFatalInternal);
 		}
+		//		vTaskResume(vTaskMotorControl);
 		/* 等待数据 */
 		xEventMotorControlData = osMessageGet(xQueueMotorControlDataHandle, osWaitForever);
-		/* 清空令牌,停止电机、测速任务 */
+		/* 等待执行完毕 */
 		xQueueReset(xQueueRunTokenMotorControlHandle);
 		xQueueReset(xQueueRunTokenSpeedMeasureHandle);
 		/* 拷贝数据 */
 		memcpy((void *)&xCurrentMotorControlData, xEventMotorControlData.value.p, sizeof(Motor_Control_Data));
-		/* ---------------------------------------------- */
+		//		/* 挂起电机、测速 */
+		//		vTaskSuspend( vTaskMotorControl );
+		//		vTaskSuspend( vTaskSpeedMeasure );
+		/* ---------------------------------------------------------------- */
 
 #ifdef DEBUG
 		/* log running message */
@@ -151,6 +167,10 @@ void vTaskProcessManager(void const * argument)
 		if (osOK != osMessagePut(xQueueSendComDataHandle, (uint32_t)&xOneSendData, 0)){
 			Error_Handler(&xErrMsgNonFatalInternal);
 		}
+		//		/* delay */
+		//		if (osEventTimeout != osDelay(random(5000))){
+		//			//			Error_Handler(pcTaskGetTaskName(NULL));
+		//		}
 #endif
 #endif
 		osThreadYield();

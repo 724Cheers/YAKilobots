@@ -770,13 +770,6 @@
         </Group>
         <Group>
           <GroupName>ThirdParty/MotionDriver</GroupName>
-          <Files>
-            <File>
-              <FileName>libmpllib.lib</FileName>
-              <FileType>4</FileType>
-              <FilePath>..\ThirdParty\MotionDriver\libmpllib.lib</FilePath>
-            </File>
-          </Files>
         </Group>
         <Group>
           <GroupName>::CMSIS</GroupName>
