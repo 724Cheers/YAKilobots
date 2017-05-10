@@ -3,6 +3,8 @@
 
 #include "utils/ringbuf.h"
 
+//#define _DebugZigbeeHandler
+
 extern tRingBufObject xZigbeeRxRing;
 
 void vTaskZigbeeHandler(void const * argument);

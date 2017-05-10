@@ -15,7 +15,9 @@ void vTaskDmaGatekeeper(void const * argument){
 	//	Exchange_Mode ExMode;
 	for (;;){
 		/* DMA总线可用 */
-		if (HAL_UART_STATE_READY == HAL_UART_GetState(_LogUartHandle) || HAL_UART_STATE_BUSY_RX == HAL_UART_GetState(_LogUartHandle)){
+		if (HAL_UART_STATE_READY == HAL_UART_GetState(_LogUartHandle) ||
+			HAL_UART_STATE_BUSY_RX == HAL_UART_GetState(_LogUartHandle))
+		{
 			/* 从xQueueDmaTxDataHandle中Get数据交换的信息 */
 			eventExData = osMessageGet(xQueueDmaHandle, osWaitForever);
 
@@ -26,7 +28,7 @@ void vTaskDmaGatekeeper(void const * argument){
 			if (NULL != pucData && 0 != usDataSize){
 				if (HAL_UART_Transmit_DMA(_LogUartHandle, pucData, usDataSize) != HAL_OK)
 				{
-					Error_Handler();
+//					Error_Handler(pcTaskGetTaskName(NULL));
 				}
 			}
 		}

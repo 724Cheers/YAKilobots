@@ -54,8 +54,16 @@
 /* include files 	*/
 /*			*/
 
-#include "PPP/ppp.h"
+//#include "PPP/ppp.h"
 #include "vTaskPppHandler.h"
+#include "utils/crc.h"
+
+#define PPP_ESCAPED		0x1
+
+typedef portCHAR u8_t;
+typedef portSHORT u16_t;
+
+#define _Polynomial 0x8005
 
 void ppp_arch_putchar(u8_t c);
 //#if 0
@@ -125,13 +133,14 @@ u16_t ahdlc_max_tx_buffer_size = 0;
 static u16_t
 crcadd(u16_t crcvalue, u8_t c)
 {
-	u16_t b;
+//	u16_t b;
 
-	b = (crcvalue ^ c) & 0xFF;
-	b = (b ^ (b << 4) & 0xFF);
-	b = (b << 8) ^ (b << 3) ^ (b >> 4);
+//	b = (crcvalue ^ c) & 0xFF;
+//	b = (b ^ (b << 4) & 0xFF);
+//	b = (b << 8) ^ (b << 3) ^ (b >> 4);
 
-	return ((crcvalue >> 8) ^ b);
+//	return ((crcvalue >> 8) ^ b);
+	return Crc16(crcvalue, (const unsigned char *)&c, 1);
 }
 /*---------------------------------------------------------------------------*/
 /* ahdlc_rx_ready() - resets the ahdlc engine to the beginning of frame
@@ -144,6 +153,18 @@ ahdlc_rx_ready(void)
 	ahdlc_rx_count = 0;
 	ahdlc_rx_crc = 0xffff;
 	ahdlc_flags |= AHDLC_RX_READY;
+}
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+/* ahdlc_rx_ready() - resets the ahdlc engine to the beginning of frame
+*	state.
+*/
+/*---------------------------------------------------------------------------*/
+void
+ahdlc_tx_ready(void)
+{
+	ahdlc_tx_count = 0;
+	ahdlc_tx_crc = 0xffff;
 }
 /*---------------------------------------------------------------------------*/
 /* ahdlc_init(buffer, buffersize) - this initializes the ahdlc engine to
@@ -163,6 +184,7 @@ ahdlc_init(u8_t *rxbuffer, u16_t maxrxbuffersize, u8_t *txbuffer, u16_t maxtxbuf
 //#ifdef AHDLC_COUNTERS
 //	ahdlc_rx_tobig_error = 0;
 //#endif
+	ahdlc_tx_ready();
 	ahdlc_rx_ready();
 }
 /*---------------------------------------------------------------------------*/
@@ -196,9 +218,9 @@ ahdlc_rx(u8_t c)
 			/* incomming char = itself xor 20 */
 			c = c ^ 0x20;
 		}
-		else if (c == 0x7e) {
+		else if (0x7e == c) {
 			/* handle frame end */
-			if (ahdlc_rx_crc == (u16_t)CRC_GOOD_VALUE) {
+			if (ahdlc_rx_crc % _Polynomial == 0) {
 				//	DEBUG1(("\nReceiving packet with good crc value, len %d\n",ahdlc_rx_count));
 				/* remove CRC bytes from packet */
 				ahdlc_rx_count -= 2;
@@ -287,6 +309,7 @@ ahdlc_tx(/*u16_t protocol, u8_t *header, */u8_t *buffer,
 {
 	u16_t i;
 	u8_t c;
+	ahdlc_tx_ready();
 
 //	DEBUG1(("\nAHDLC_TX - transmit frame, protocol 0x%04x, length %d\n", protocol, datalen + headerlen));
 
@@ -307,8 +330,8 @@ ahdlc_tx(/*u16_t protocol, u8_t *header, */u8_t *buffer,
 	/* write leading 0x7e */
 	ppp_arch_putchar(0x7e);
 
-	/* set initial CRC value */
-	ahdlc_tx_crc = 0xffff;
+//	/* set initial CRC value */
+//	ahdlc_tx_crc = 0xffff;
 
 	/* Write frame bytes */
 	for (i = 0; i < datalen; ++i) {
@@ -319,15 +342,14 @@ ahdlc_tx(/*u16_t protocol, u8_t *header, */u8_t *buffer,
 	}
 
 	/* send crc, lsb then msb */
-	i = ahdlc_tx_crc ^ 0xffff;
+//	i = ahdlc_tx_crc ^ 0xffff;
+	i = ahdlc_tx_crc;
 	ahdlc_tx_char(/*protocol, */(u8_t)(i & 0xff));
 	ahdlc_tx_char(/*protocol, */(u8_t)((i >> 8) & 0xff));
 
 	/* write trailing 0x7e, probably not needed but it doesn't hurt*/
 	ppp_arch_putchar(0x7e);
-	u16_t cur_ahdlc_tx_count = ahdlc_tx_count;
-	ahdlc_tx_count = 0;
-	return cur_ahdlc_tx_count;
+	return ahdlc_tx_count;
 }
 /*---------------------------------------------------------------------------*/
 

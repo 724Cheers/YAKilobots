@@ -11,3 +11,8 @@ Backup
 *.XRay
 *.bak
 *.uvoptx
+Drivers/
+Inc/
+Middlewares/
+Src/
+MDK-ARM/RTE
