@@ -6,31 +6,37 @@
 
 /* Queue */
 extern osMessageQId xQueueLogToPcHandle;
+extern osMessageQId xQueueMagMeasureDataHandle;	/* save data */
+extern osMessageQId xQueueRunTokenMagMeasureHandle;	/* execute token */
 /* Semaphore */
 
-/* vTaskMagMeasure function */
 void vTaskMagMeasure(void const * argument)
 {
 #ifdef DEBUG
-	const unsigned portCHAR pucTaskMagMeasureRunningMsg[] = "\r\nMessage: Mag Measure Task works well.\r\n";
-	Dma_Gatekeeper_Exchange_Data pxTaskMagMeasureRunningMsg = {
-		(unsigned char *)pucTaskMagMeasureRunningMsg,
-		strlen((char *)pucTaskMagMeasureRunningMsg)
+	const unsigned portCHAR pucTaskRunningMsg[] = "\r\nMessage: Mag Measure Task works well.\r\n";
+	Dma_Gatekeeper_Exchange_Data pxTaskRunningMsg = {
+		(unsigned char *)pucTaskRunningMsg,
+		strlen((char *)pucTaskRunningMsg)
 	};
 #endif
-
+	
+#pragma pack(1)
+	static Mag_Measure_Data xCurrentMagMeasureData = {0};
+#pragma pack()
 	/* Infinite loop */
 	for (;;)
 	{
+		osMessagePeek(xQueueRunTokenMagMeasureHandle, osWaitForever);
+		/* add codes here */
+		
 #ifdef DEBUG
 		/* log running message */
-		osMessagePut(xQueueLogToPcHandle, (uint32_t)&pxTaskMagMeasureRunningMsg, 0);
+		osMessagePut(xQueueLogToPcHandle, (uint32_t)&pxTaskRunningMsg, 0);	
 		
 		#ifdef _DebugTaskMagMeasure
+		osDelay(random(5000));
+		osMessagePut(xQueueMagMeasureDataHandle, (uint32_t)&xCurrentMagMeasureData, osWaitForever);
 		#endif
-		if (osEventTimeout != osDelay(random(5000))){
-			//			Error_Handler(pcTaskGetTaskName(NULL));
-		}
 #endif
 		osThreadYield();
 	}

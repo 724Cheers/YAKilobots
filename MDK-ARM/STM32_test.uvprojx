@@ -373,7 +373,7 @@
               <MiscControls>--C99</MiscControls>
               <Define>USE_HAL_DRIVER,STM32F103xE</Define>
               <Undefine></Undefine>
-              <IncludePath>../Inc;      ../Drivers/STM32F1xx_HAL_Driver/Inc;      ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;      ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM3;      ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc;      ../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc;      ../Middlewares/Third_Party/FreeRTOS/Source/include;      ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;      ../Drivers/CMSIS/Include;      ../Drivers/CMSIS/Device/ST/STM32F1xx/Include;      ..\User;      ..\ThirdParty</IncludePath>
+              <IncludePath>../Inc;             ../Drivers/STM32F1xx_HAL_Driver/Inc;             ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;             ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM3;             ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc;             ../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc;             ../Middlewares/Third_Party/FreeRTOS/Source/include;             ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;             ../Drivers/CMSIS/Include;             ../Drivers/CMSIS/Device/ST/STM32F1xx/Include;             ..\User;             ..\ThirdParty</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -676,15 +676,15 @@
               <FileType>1</FileType>
               <FilePath>../Src/freertos.c</FilePath>
             </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Application/UserTask</GroupName>
+          <Files>
             <File>
               <FileName>commonFuntion.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\commonFuntion.c</FilePath>
-            </File>
-            <File>
-              <FileName>vTaskZigbeeHandler.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\vTaskZigbeeHandler.c</FilePath>
             </File>
             <File>
               <FileName>vTaskDmaGatekeeper.c</FileName>
@@ -692,24 +692,34 @@
               <FilePath>..\User\vTaskDmaGatekeeper.c</FilePath>
             </File>
             <File>
-              <FileName>vTaskMagMeasure.c</FileName>
+              <FileName>vTaskZigbeeHandler.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\User\vTaskMagMeasure.c</FilePath>
-            </File>
-            <File>
-              <FileName>interrupt.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\interrupt.c</FilePath>
-            </File>
-            <File>
-              <FileName>cpu.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\cpu.c</FilePath>
+              <FilePath>..\User\vTaskZigbeeHandler.c</FilePath>
             </File>
             <File>
               <FileName>vTaskPppHandler.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\vTaskPppHandler.c</FilePath>
+            </File>
+            <File>
+              <FileName>vTaskMagMeasure.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\vTaskMagMeasure.c</FilePath>
+            </File>
+            <File>
+              <FileName>vTaskSpeedMeasure.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\vTaskSpeedMeasure.c</FilePath>
+            </File>
+            <File>
+              <FileName>vTaskDistMeasure.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\vTaskDistMeasure.c</FilePath>
+            </File>
+            <File>
+              <FileName>vTaskMotorControl.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\vTaskMotorControl.c</FilePath>
             </File>
             <File>
               <FileName>vTaskProcessManager.c</FileName>
@@ -731,6 +741,16 @@
         <Group>
           <GroupName>ThirdParty/utils</GroupName>
           <Files>
+            <File>
+              <FileName>interrupt.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\interrupt.c</FilePath>
+            </File>
+            <File>
+              <FileName>cpu.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\cpu.c</FilePath>
+            </File>
             <File>
               <FileName>ringbuf.c</FileName>
               <FileType>1</FileType>

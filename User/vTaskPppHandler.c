@@ -9,6 +9,7 @@
 #define _SendFrameBufferSize (_ZigbeeHeaderLength + 4 + _ComDataLength * 2)
 
 /* Queue */
+extern osMessageQId xQueueLogToPcHandle;
 extern osMessageQId xQueueSendComDataHandle;	/* vTaskProcessManager grenerate it */
 extern osMessageQId xQueueDmaHandle;
 extern osMessageQId xQueueReceivedComDataHandle;
@@ -21,6 +22,14 @@ static Com_Data pxReceivedComData[_ComNum] = { 0 };
 
 void vTaskPppHandler(void const * argument)
 {
+#ifdef DEBUG
+	const unsigned portCHAR pucTaskRunningMsg[] = "\r\nMessage: PPP Handler Task works well.\r\n";
+	Dma_Gatekeeper_Exchange_Data pxTaskTaskZigbeeHandlerRunningMsg = {
+		(unsigned char *)pucTaskRunningMsg,
+		strlen((char *)pucTaskRunningMsg)
+	};
+#endif
+
 	const Error_Message xErrMsgNonFatalInternal = {
 		NonFatal_Internal,
 		pcTaskGetTaskName(NULL)
@@ -83,6 +92,10 @@ void vTaskPppHandler(void const * argument)
 			ahdlc_rx(RingBufReadOne(&xZigbeeRxRing));
 		}
 		
+		#ifdef DEBUG
+		/* 向PC推送运行消息 */
+		osMessagePut(xQueueLogToPcHandle, (uint32_t)&pxTaskTaskZigbeeHandlerRunningMsg, 0);
+		#endif
 		/* Sleep for a random time <= _PppSleepRandomTimeMax */
 		if (osEventTimeout != osDelay(random(_PppSleepRandomTimeMax))){
 			//			Error_Handler(pcTaskGetTaskName(NULL));

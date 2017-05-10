@@ -5,6 +5,8 @@
 #include "rtc.h"
 #include <string.h>
 #include <stdlib.h>
+#include "main.h"
+#include "freertos.h"
 
 typedef enum{
 	PC,
@@ -24,6 +26,11 @@ typedef struct{
 	Error_Type xErrType;
 	portCHAR *pcTaskName;
 }Error_Message;
+
+typedef struct{
+	double rho;
+	double alpha;
+}Polar_Vector;
 
 
 //#define vLogToPc(pcMsg) {\
