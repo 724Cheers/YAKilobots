@@ -38,8 +38,12 @@
 
 /* USER CODE BEGIN Includes */     
 #include "usart.h"
-#include "vDmaGatekeeperTask.h"
+#include "vTaskDmaGatekeeper.h"
+#include "vTaskZigbeeHandler.h"
+#include "vTaskMagMeasure.h"
 #include "commonFuntion.h"
+#include "string.h"
+#include "usart.h"
 /* USER CODE END Includes */
 
 /* Variables -----------------------------------------------------------------*/
@@ -58,16 +62,16 @@ osTimerId xTimerUltrasonicBackHandle;
 osTimerId xTimerUltrasonicRightHandle;
 osTimerId xTimerUltrasonicHandle;
 osSemaphoreId xBinSemDmaIsOkHandle;
+osSemaphoreId xBinSemZigbeeRecieveHandle;
 
 /* USER CODE BEGIN Variables */
-
 /* USER CODE END Variables */
 
 /* Function prototypes -------------------------------------------------------*/
-void vLogToPcTask(void const * argument);
-void vZigbeeHandlerTask(void const * argument);
-void vMagMeasureTask(void const * argument);
-extern void vDmaGatekeeperTask(void const * argument);
+void vTaskLogToPc(void const * argument);
+extern void vTaskZigbeeHandler(void const * argument);
+extern void vTaskMagMeasure(void const * argument);
+extern void vTaskDmaGatekeeper(void const * argument);
 void vTimerLogToPcCallback(void const * argument);
 void vTimerUltrasonicFrontCallback(void const * argument);
 void vTimerUltrasonicLeftCallback(void const * argument);
@@ -82,6 +86,18 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 /* USER CODE END FunctionPrototypes */
 
 /* Hook prototypes */
+void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName);
+
+/* USER CODE BEGIN 4 */
+void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
+{
+   /* Run time stack overflow checking is performed if
+   configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2. This hook function is
+   called if a stack overflow is detected. */
+	consoleLog(pcTaskName);
+	consoleLog(" has been overflowed");
+}
+/* USER CODE END 4 */
 
 /* Init FreeRTOS */
 
@@ -98,6 +114,10 @@ void MX_FREERTOS_Init(void) {
   /* definition and creation of xBinSemDmaIsOk */
   osSemaphoreDef(xBinSemDmaIsOk);
   xBinSemDmaIsOkHandle = osSemaphoreCreate(osSemaphore(xBinSemDmaIsOk), 1);
+
+  /* definition and creation of xBinSemZigbeeRecieve */
+  osSemaphoreDef(xBinSemZigbeeRecieve);
+  xBinSemZigbeeRecieveHandle = osSemaphoreCreate(osSemaphore(xBinSemZigbeeRecieve), 1);
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
@@ -135,19 +155,19 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* definition and creation of LogToPc */
-  osThreadDef(LogToPc, vLogToPcTask, osPriorityIdle, 0, 64);
+  osThreadDef(LogToPc, vTaskLogToPc, osPriorityIdle, 0, 64);
   LogToPcHandle = osThreadCreate(osThread(LogToPc), NULL);
 
   /* definition and creation of ZigbeeHandler */
-  osThreadDef(ZigbeeHandler, vZigbeeHandlerTask, osPriorityLow, 0, 128);
+  osThreadDef(ZigbeeHandler, vTaskZigbeeHandler, osPriorityLow, 0, 128);
   ZigbeeHandlerHandle = osThreadCreate(osThread(ZigbeeHandler), NULL);
 
   /* definition and creation of MagMeasure */
-  osThreadDef(MagMeasure, vMagMeasureTask, osPriorityNormal, 0, 64);
+  osThreadDef(MagMeasure, vTaskMagMeasure, osPriorityNormal, 0, 64);
   MagMeasureHandle = osThreadCreate(osThread(MagMeasure), NULL);
 
   /* definition and creation of DmaGatekeeper */
-  osThreadDef(DmaGatekeeper, vDmaGatekeeperTask, osPriorityIdle, 0, 64);
+  osThreadDef(DmaGatekeeper, vTaskDmaGatekeeper, osPriorityIdle, 0, 64);
   DmaGatekeeperHandle = osThreadCreate(osThread(DmaGatekeeper), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -173,94 +193,37 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
+	__HAL_UART_FLUSH_DRREGISTER(&_ZigbeeUartHandle);
+	HAL_UART_Receive_DMA(&_ZigbeeUartHandle, pcZigbeeRxBuffer, _RxBufferSize);
+	_ZigbeeUartHandle.State = HAL_UART_STATE_READY;
   /* USER CODE END RTOS_QUEUES */
 }
 
-/* vLogToPcTask function */
-void vLogToPcTask(void const * argument)
+/* vTaskLogToPc function */
+void vTaskLogToPc(void const * argument)
 {
   /* init code for USB_DEVICE */
   MX_USB_DEVICE_Init();
 
-  /* USER CODE BEGIN vLogToPcTask */
+  /* USER CODE BEGIN vTaskLogToPc */
 	osEvent eventLogToPc;
   /* Infinite loop */
   for(;;)
   {
-		/* 从xQueueLogToPcHandle中Get�?要发送的日志 */		
+		/* 从xQueueLogToPcHandle中Get要发送的日志 */		
 		eventLogToPc = osMessageGet	(	xQueueLogToPcHandle, osWaitForever );
 		
-		/* 向xQueueDmaTxDataHandle中Put�?要�?�过DMA发�?�的数据 */
+		/* 向xQueueDmaTxDataHandle中Put要通过DMA发送的数据 */
 		if( osOK != osMessagePut ( xQueueDmaHandle, (uint32_t)eventLogToPc.value.p, 0 ) ){
 //			Error_Handler();
 		}
-		/* 向xQueueLogToPcHandle中Put任务运行状�?? */
 		#ifdef DEBUG
-		
-//		Dma_Gatekeeper_Exchange_Data ExData ={
-//			Dma_Tx,
-//			"Message: Log To Pc task works well.\r\n"
-//		};
-//		osMessagePut ( xQueueLogToPcHandle, (uint32_t)&ExData, osWaitForever );
-//		osDelay(1000);
+		/* 向xQueueLogToPcHandle中Put任务运行状态 */
+//		vLogToPc("Message: Log To Pc task works well.\r\n");
 		#endif
 		osThreadYield();
   }
-  /* USER CODE END vLogToPcTask */
-}
-
-/* vZigbeeHandlerTask function */
-void vZigbeeHandlerTask(void const * argument)
-{
-  /* USER CODE BEGIN vZigbeeHandlerTask */
-  /* Infinite loop */
-  for(;;)
-  {
-//		if(HAL_UART_Receive_DMA(&huart1, (uint8_t *)uart1RxBuffer, RX_BUFFER_SIZE) == HAL_TIMEOUT)
-//		{
-//			consoleLog("Message: Zigbee Rx timeout.\r\n");
-////			Error_Handler();
-//		}
-//		consoleLog("Message: Zigbee Handler Task works well.\r\n");
-		#ifdef DEBUG
-		Dma_Gatekeeper_Exchange_Data ZigbeeHandlerExData ={
-			Dma_Tx,
-			"Message: Zigbee Handler Task works well.\r\n"
-		};
-		if( osOK != osMessagePut ( xQueueLogToPcHandle, (uint32_t)&ZigbeeHandlerExData, 0 ) ){
-			Error_Handler();
-		}
-		if( osEventTimeout != osDelay(900) ){
-//			Error_Handler();
-		}
-		#endif
-		osThreadYield();
-  }
-  /* USER CODE END vZigbeeHandlerTask */
-}
-
-/* vMagMeasureTask function */
-void vMagMeasureTask(void const * argument)
-{
-  /* USER CODE BEGIN vMagMeasureTask */
-  /* Infinite loop */
-  for(;;)
-  {
-		#ifdef DEBUG
-		Dma_Gatekeeper_Exchange_Data ExData ={
-			Dma_Tx,
-			"Message: Mag Measure Task works well.\r\n"
-		};
-		if( osOK != osMessagePut ( xQueueLogToPcHandle, (uint32_t)&ExData, 0 ) ){
-//			Error_Handler();
-		}
-		if( osEventTimeout != osDelay(1000) ){
-//			Error_Handler();
-		}
-		#endif
-		osThreadYield();
-  }
-  /* USER CODE END vMagMeasureTask */
+  /* USER CODE END vTaskLogToPc */
 }
 
 /* vTimerLogToPcCallback function */
@@ -268,32 +231,7 @@ void vTimerLogToPcCallback(void const * argument)
 {
   /* USER CODE BEGIN vTimerLogToPcCallback */
 	#ifdef DEBUG
-//	Dma_Gatekeeper_Exchange_Data ExData ={
-//		Dma_Tx,
-//		"Message: Timer log to Pc callback works well.\r\n"
-//	};
-//	osMessagePut ( xQueueLogToPcHandle, (uint32_t)&ExData, 0 );
-
-//	osTimerStart	(	xTimerLogToPcHandle, 1000 );
-//	
-//	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-//	if (xQueueSendFromISR(xQueueLogToPcHandle, &ExData, &xHigherPriorityTaskWoken) != pdTRUE) {
-////		return osErrorOS;
-//	}
-
-//	/* xTimerStartFromISR() or xTimerResetFromISR() could be called here
-//	as both cause the timer to re-calculate its expiry time.
-//	xHigherPriorityTaskWoken was initialised to pdFALSE when it was
-//	declared (in this function). */
-//	if( xTimerResetFromISR( xTimerLogToPcHandle,
-//													&xHigherPriorityTaskWoken ) != pdPASS )
-//	{
-//			/* The reset command was not executed successfully.  Take appropriate
-//			action here. */
-//	}
-
-//	/* Perform the rest of the key processing here. */
-
+	
 	#endif
   /* USER CODE END vTimerLogToPcCallback */
 }

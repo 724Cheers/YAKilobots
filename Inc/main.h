@@ -9,6 +9,8 @@
 #define DEBUG
 #endif
 
+#define _ZigbeeUartHandle huart1
+
 void consoleLog(portCHAR *msg);
 
 #endif /*__main_H */

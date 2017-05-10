@@ -39,7 +39,8 @@
 #include "dma.h"
 
 /* USER CODE BEGIN 0 */
-portCHAR uart1RxBuffer[RX_BUFFER_SIZE] = "";
+portCHAR pcZigbeeRxBuffer[_RxBufferSize] = {0};
+portCHAR pcZigbeeTxBuffer[_RxBufferSize] = {0};
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart1;
@@ -55,7 +56,7 @@ void MX_USART1_UART_Init(void)
 {
 
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 9600;
+  huart1.Init.BaudRate = 115200;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -116,8 +117,8 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     hdma_usart1_rx.Init.MemInc = DMA_MINC_ENABLE;
     hdma_usart1_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
     hdma_usart1_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-    hdma_usart1_rx.Init.Mode = DMA_NORMAL;
-    hdma_usart1_rx.Init.Priority = DMA_PRIORITY_LOW;
+    hdma_usart1_rx.Init.Mode = DMA_CIRCULAR;
+    hdma_usart1_rx.Init.Priority = DMA_PRIORITY_MEDIUM;
     HAL_DMA_Init(&hdma_usart1_rx);
 
     __HAL_LINKDMA(huart,hdmarx,hdma_usart1_rx);
@@ -138,7 +139,8 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     HAL_NVIC_SetPriority(USART1_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
   /* USER CODE BEGIN USART1_MspInit 1 */
-
+		/* enable Idle IT modified by hxl at 0412*/
+		__HAL_UART_ENABLE_IT(huart, UART_IT_IDLE);
   /* USER CODE END USART1_MspInit 1 */
   }
   else if(huart->Instance==USART3)
@@ -223,7 +225,8 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
     HAL_NVIC_DisableIRQ(USART1_IRQn);
 
   /* USER CODE BEGIN USART1_MspDeInit 1 */
-
+		/* disable Idle IT modified by hxl at 0412*/
+		__HAL_UART_DISABLE_IT(huart, UART_IT_IDLE);
   /* USER CODE END USART1_MspDeInit 1 */
   }
   else if(huart->Instance==USART3)

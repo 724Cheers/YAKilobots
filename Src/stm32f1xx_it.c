@@ -38,14 +38,18 @@
 
 /* USER CODE BEGIN 0 */
 #include "main.h"
-#include "stm32f1xx_hal_uart.h"
-#include "cmsis_os.h"
-#include "vDmaGatekeeperTask.h"
+#include "usart.h"
+#include <stdbool.h>
+#include "semphr.h"
 
 extern osSemaphoreId xBinSemLogToPcIsOkHandle;
 extern osMessageQId xQueueLogToPcHandle;
 extern osTimerId xTimerLogToPcHandle;
 extern osMessageQId xQueueTim8UpIrqHandle;
+extern osSemaphoreId xBinSemDmaIsOkHandle;
+extern osSemaphoreId xBinSemZigbeeRecieveHandle;
+
+void HAL_UART_IdleCallback(UART_HandleTypeDef *huart);
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -254,9 +258,7 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
 void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART1_IRQn 0 */
-	if(__HAL_UART_GET_IT_SOURCE(&huart1, UART_IT_IDLE) == SET){
-		osSemaphoreRelease( xBinSemLogToPcIsOkHandle );
-	}
+	HAL_UART_IdleCallback(&huart1);
   /* USER CODE END USART1_IRQn 0 */
   HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */
@@ -321,6 +323,54 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle)
 			
 		}
     Error_Handler();
+}
+
+/**
+  * @brief  Rx Transfer completed callbacks.
+  * @param  huart: Pointer to a UART_HandleTypeDef structure that contains
+  *                the configuration information for the specified UART module.
+  * @retval None
+  */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	huart->RxXferCount = huart->RxXferSize - huart->hdmarx->Instance->CNDTR % huart->RxXferSize;
+	if(&_ZigbeeUartHandle == huart){		
+		osSemaphoreWait(xBinSemZigbeeRecieveHandle, 0);
+		if( osOK != osSemaphoreRelease( xBinSemZigbeeRecieveHandle ) ){
+//			Error_Handler();
+		}
+	}
+}
+
+void HAL_UART_IdleCallback(UART_HandleTypeDef *huart)
+{
+	uint32_t tmp_flag = 0, tmp_it_source = 0;
+	
+	/* UART IDLE interrupt occurred -------------------------------------*/
+	tmp_flag = __HAL_UART_GET_FLAG(huart, UART_FLAG_IDLE);
+	tmp_it_source = __HAL_UART_GET_IT_SOURCE(huart, UART_IT_IDLE);
+	if((tmp_flag != RESET) && (tmp_it_source != RESET))
+	{
+		__HAL_UART_CLEAR_IDLEFLAG(huart);
+		/* 判断缓冲区是否接收满 */
+		if(huart->hdmarx->Instance->CNDTR % huart->RxXferSize != 0){
+			/* 停止DMA防止数据进来 */
+			HAL_UART_DMAStop(huart);
+			/* 把接收到的数据数目写入huart->RxXferCount */
+			huart->RxXferCount = huart->RxXferSize - huart->hdmarx->Instance->CNDTR % huart->RxXferSize;
+			/* 标记有数据待读取 */
+			if(&_ZigbeeUartHandle == huart){
+				if( osOK != osSemaphoreRelease( xBinSemZigbeeRecieveHandle ) ){
+//					Error_Handler();
+				}
+			}
+			/* 重启DMA */
+			HAL_UART_Receive_DMA(huart, pcZigbeeRxBuffer, _RxBufferSize);
+		}
+		/* 清空UART_Rx忙碌标志 */
+		huart->State = HAL_UART_STATE_READY;
+
+	}
 }
 
 /* USER CODE END 1 */

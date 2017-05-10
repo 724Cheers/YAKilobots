@@ -1,15 +1,28 @@
 #include "commonFuntion.h"
-#include "vDmaGatekeeperTask.h"
 
 extern osMessageQId xQueueLogToPcHandle;
 
-//void vLogToPc(portCHAR *pcMsg){
-//	Dma_Gatekeeper_Exchange_Data ExData = {
-//		Dma_Tx,
-//		pcMsg
-//	};
-//	osMessagePut	(	xQueueLogToPcHandle, (uint32_t)&ExData, osWaitForever );
-//}
+/**
+  * @brief  Display the current time and date.
+  * @param  showtime : pointer to buffer
+  * @param  showdate : pointer to buffer
+  * @retval None
+  */
+void RTC_CalendarShow(RTC_HandleTypeDef RtcHandle, portCHAR *showtime, portCHAR *showdate)
+{
+  RTC_DateTypeDef sdatestructureget;
+  RTC_TimeTypeDef stimestructureget;
+
+  /* Get the RTC current Time */
+  HAL_RTC_GetTime(&RtcHandle, &stimestructureget, RTC_FORMAT_BIN);
+  /* Get the RTC current Date */
+  HAL_RTC_GetDate(&RtcHandle, &sdatestructureget, RTC_FORMAT_BIN);
+  /* Display time Format : hh:mm:ss */
+  sprintf((char *)showtime, "%02d:%02d:%02d", stimestructureget.Hours, stimestructureget.Minutes, stimestructureget.Seconds);
+  /* Display date Format : yy-mm-dd */
+  sprintf((char *)showdate, "%2d-%02d-%02d", 2000 + sdatestructureget.Year, sdatestructureget.Month, sdatestructureget.Date);
+}
+
 //void vLogToPcFromISR(portCHAR *pcMsg){
 //	portBASE_TYPE taskWoken = pdFALSE;
 //	Dma_Gatekeeper_Exchange_Data ExData = {
@@ -32,3 +45,10 @@ void Error_Handler(void)
     HAL_Delay(1000);
   }  
 }
+
+//rtc.c
+//sscanf(__TIME__, "%2x:%2x:%2x", &(sTime.Hours), &(sTime.Minutes), &(sTime.Seconds));
+//sTime.Hours = sTime.Hours % 12;
+//sscanf(__DATE__, "%*s %2x 20%2x", &(DateToUpdate.Date), &(DateToUpdate.Year));
+
+
