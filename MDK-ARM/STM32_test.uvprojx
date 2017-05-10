@@ -373,7 +373,7 @@
               <MiscControls>--C99</MiscControls>
               <Define>USE_HAL_DRIVER,STM32F103xE</Define>
               <Undefine></Undefine>
-              <IncludePath>../Inc;             ../Drivers/STM32F1xx_HAL_Driver/Inc;             ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;             ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM3;             ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc;             ../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc;             ../Middlewares/Third_Party/FreeRTOS/Source/include;             ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;             ../Drivers/CMSIS/Include;             ../Drivers/CMSIS/Device/ST/STM32F1xx/Include;             ..\User;             ..\ThirdParty</IncludePath>
+              <IncludePath>../Inc; ../Drivers/STM32F1xx_HAL_Driver/Inc; ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy; ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM3; ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc; ../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc; ../Middlewares/Third_Party/FreeRTOS/Source/include; ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS; ../Drivers/CMSIS/Include; ../Drivers/CMSIS/Device/ST/STM32F1xx/Include; ..\User; ..\ThirdParty; ..\ThirdParty\MotionDriver</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -765,6 +765,16 @@
               <FileName>printf-stdarg.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\ThirdParty\printf-stdarg.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>ThirdParty/MotionDriver</GroupName>
+          <Files>
+            <File>
+              <FileName>libmpllib.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\ThirdParty\MotionDriver\libmpllib.lib</FilePath>
             </File>
           </Files>
         </Group>

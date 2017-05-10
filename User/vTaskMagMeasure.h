@@ -3,6 +3,8 @@
 
 #define _DebugTaskMagMeasure
 
+#define MPU9250
+
 #pragma pack(1)
 typedef struct{
 	double dDirection;

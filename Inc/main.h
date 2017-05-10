@@ -28,6 +28,8 @@ extern UART_HandleTypeDef huart1;
 
 #define _PrintfUartHandle _LogUartHandle
 
+#define _Mpu9255I2cHandle (&hi2c1)
+
 void consoleLog(portCHAR *msg);
 
 #endif /*__main_H */
