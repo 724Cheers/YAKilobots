@@ -7,3 +7,4 @@
 *.doc binary
 *.docx binary
 *.ioc text eol=crlf
+*.uvprojx eol=crlf
