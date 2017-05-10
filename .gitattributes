@@ -1,0 +1,9 @@
+* text eol=lf
+*.jpg binary
+*.png binary
+*.dll binary
+*.swf binary
+*.so binary
+*.doc binary
+*.docx binary
+*.ioc text eol=crlf
