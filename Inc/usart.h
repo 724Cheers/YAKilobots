@@ -50,9 +50,9 @@ extern UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN Private defines */
 /* config RxBuffer modified by hxl at 0412*/
-#define _RxBufferSize 100
-extern portCHAR pcZigbeeRxBuffer[_RxBufferSize];
-extern portCHAR pcZigbeeTxBuffer[_RxBufferSize];
+#define _Uart1RxBufferSize _ZigbeeRxBufferSize
+extern portCHAR pcUart1RxBuffer[_Uart1RxBufferSize];
+//extern portCHAR pcZigbeeTxBuffer[_RxBufferSize];
 /* USER CODE END Private defines */
 
 void MX_USART1_UART_Init(void);

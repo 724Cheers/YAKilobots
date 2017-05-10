@@ -51,10 +51,13 @@ osThreadId LogToPcHandle;
 osThreadId ZigbeeHandlerHandle;
 osThreadId MagMeasureHandle;
 osThreadId DmaGatekeeperHandle;
+osThreadId PppHandlerHandle;
+osThreadId ProcessManagerHandle;
 osMessageQId xQueueLogToPcHandle;
 osMessageQId xQueueZigbeeRecieveHandle;
 osMessageQId xQueueDmaHandle;
 osMessageQId xQueueTim8UpIrqHandle;
+osMessageQId xQueueSendComFrameHandle;
 osTimerId xTimerLogToPcHandle;
 osTimerId xTimerUltrasonicFrontHandle;
 osTimerId xTimerUltrasonicLeftHandle;
@@ -72,6 +75,8 @@ void vTaskLogToPc(void const * argument);
 extern void vTaskZigbeeHandler(void const * argument);
 extern void vTaskMagMeasure(void const * argument);
 extern void vTaskDmaGatekeeper(void const * argument);
+extern void vTaskPppHandler(void const * argument);
+extern void vTaskProcessManager(void const * argument);
 void vTimerLogToPcCallback(void const * argument);
 void vTimerUltrasonicFrontCallback(void const * argument);
 void vTimerUltrasonicLeftCallback(void const * argument);
@@ -94,7 +99,7 @@ void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
    /* Run time stack overflow checking is performed if
    configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2. This hook function is
    called if a stack overflow is detected. */
-	consoleLog(pcTaskName);
+	consoleLog((portCHAR *)pcTaskName);
 	consoleLog(" has been overflowed");
 }
 /* USER CODE END 4 */
@@ -170,13 +175,21 @@ void MX_FREERTOS_Init(void) {
   osThreadDef(DmaGatekeeper, vTaskDmaGatekeeper, osPriorityIdle, 0, 64);
   DmaGatekeeperHandle = osThreadCreate(osThread(DmaGatekeeper), NULL);
 
+  /* definition and creation of PppHandler */
+  osThreadDef(PppHandler, vTaskPppHandler, osPriorityLow, 0, 64);
+  PppHandlerHandle = osThreadCreate(osThread(PppHandler), NULL);
+
+  /* definition and creation of ProcessManager */
+  osThreadDef(ProcessManager, vTaskProcessManager, osPriorityRealtime, 0, 256);
+  ProcessManagerHandle = osThreadCreate(osThread(ProcessManager), NULL);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
 
   /* Create the queue(s) */
   /* definition and creation of xQueueLogToPc */
-  osMessageQDef(xQueueLogToPc, 16, uint32_t);
+  osMessageQDef(xQueueLogToPc, 100, uint32_t);
   xQueueLogToPcHandle = osMessageCreate(osMessageQ(xQueueLogToPc), NULL);
 
   /* definition and creation of xQueueZigbeeRecieve */
@@ -184,18 +197,22 @@ void MX_FREERTOS_Init(void) {
   xQueueZigbeeRecieveHandle = osMessageCreate(osMessageQ(xQueueZigbeeRecieve), NULL);
 
   /* definition and creation of xQueueDma */
-  osMessageQDef(xQueueDma, 16, uint32_t);
+  osMessageQDef(xQueueDma, 100, uint32_t);
   xQueueDmaHandle = osMessageCreate(osMessageQ(xQueueDma), NULL);
 
   /* definition and creation of xQueueTim8UpIrq */
   osMessageQDef(xQueueTim8UpIrq, 16, uint16_t);
   xQueueTim8UpIrqHandle = osMessageCreate(osMessageQ(xQueueTim8UpIrq), NULL);
 
+  /* definition and creation of xQueueSendComFrame */
+  osMessageQDef(xQueueSendComFrame, 1, uint32_t);
+  xQueueSendComFrameHandle = osMessageCreate(osMessageQ(xQueueSendComFrame), NULL);
+
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
-	__HAL_UART_FLUSH_DRREGISTER(&_ZigbeeUartHandle);
-	HAL_UART_Receive_DMA(&_ZigbeeUartHandle, pcZigbeeRxBuffer, _RxBufferSize);
-	_ZigbeeUartHandle.State = HAL_UART_STATE_READY;
+//	__HAL_UART_FLUSH_DRREGISTER(_ZigbeeUartHandle);
+//	HAL_UART_Receive_DMA(_ZigbeeUartHandle, (uint8_t *)pcZigbeeRxBuffer, _ZigbeeRxBufferSize);
+//	_ZigbeeUartHandle.State = HAL_UART_STATE_READY;
   /* USER CODE END RTOS_QUEUES */
 }
 
@@ -213,12 +230,12 @@ void vTaskLogToPc(void const * argument)
 		/* 从xQueueLogToPcHandle中Get要发送的日志 */		
 		eventLogToPc = osMessageGet	(	xQueueLogToPcHandle, osWaitForever );
 		
-		/* 向xQueueDmaTxDataHandle中Put要通过DMA发送的数据 */
+		/* 向xQueueDmaTxDataHandle中Put要�?�过DMA发�?�的数据 */
 		if( osOK != osMessagePut ( xQueueDmaHandle, (uint32_t)eventLogToPc.value.p, 0 ) ){
 //			Error_Handler();
 		}
 		#ifdef DEBUG
-		/* 向xQueueLogToPcHandle中Put任务运行状态 */
+		/* 向xQueueLogToPcHandle中Put任务运行状�?? */
 //		vLogToPc("Message: Log To Pc task works well.\r\n");
 		#endif
 		osThreadYield();

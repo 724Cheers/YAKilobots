@@ -5,11 +5,16 @@
 #include "rtc.h"
 #include <string.h>
 
-#define vLogToPc(pcMsg) {\
-	if( osOK != osMessagePut ( xQueueLogToPcHandle, (uint32_t)pcMsg, 0 ) ){\
-		Error_Handler();\
-	}\
-}
+//#define vLogToPc(pcMsg) {\
+//	if( osOK != osMessagePut ( xQueueLogToPcHandle, (uint32_t)pcMsg, 0 ) ){\
+//		Error_Handler();\
+//	}\
+//}
+
+typedef enum{
+	Seed,
+	GV1,
+}Gradient_Value;
 
 void vLogToPcFromISR(portCHAR *pcMsg);
 void RTC_CalendarShow(RTC_HandleTypeDef RtcHandle, portCHAR *showtime, portCHAR *showdate);

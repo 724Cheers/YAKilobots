@@ -1,4 +1,5 @@
 #include "commonFuntion.h"
+#include "vTaskDmaGatekeeper.h"
 
 extern osMessageQId xQueueLogToPcHandle;
 
@@ -21,6 +22,12 @@ void RTC_CalendarShow(RTC_HandleTypeDef RtcHandle, portCHAR *showtime, portCHAR 
   sprintf((char *)showtime, "%02d:%02d:%02d", stimestructureget.Hours, stimestructureget.Minutes, stimestructureget.Seconds);
   /* Display date Format : yy-mm-dd */
   sprintf((char *)showdate, "%2d-%02d-%02d", 2000 + sdatestructureget.Year, sdatestructureget.Month, sdatestructureget.Date);
+}
+
+void vLogToPc(Dma_Gatekeeper_Exchange_Data *pxExData) {	
+	if( osOK != osMessagePut ( xQueueLogToPcHandle, (uint32_t)pxExData, 0 ) ){
+		Error_Handler();
+	}
 }
 
 //void vLogToPcFromISR(portCHAR *pcMsg){

@@ -2,6 +2,7 @@
 #include "freertos.h"
 #include "usart.h"
 #include "commonFuntion.h"
+#include "vTaskDmaGatekeeper.h"
 
 /* Queue */
 extern osMessageQId xQueueLogToPcHandle;
@@ -10,12 +11,22 @@ extern osMessageQId xQueueLogToPcHandle;
 /* vTaskMagMeasure function */
 void vTaskMagMeasure(void const * argument)
 {
+	#ifdef DEBUG
+	unsigned portCHAR pucTaskMagMeasureRunningMsg[] = "\r\nMessage: Mag Measure Task works well.\r\n";
+	Dma_Gatekeeper_Exchange_Data pxTaskMagMeasureRunningMsg = {
+		pucTaskMagMeasureRunningMsg,
+		strlen((char *)pucTaskMagMeasureRunningMsg)
+	};
+	#endif
+
   /* Infinite loop */
   for(;;)
   {
 		#ifdef DEBUG
-		vLogToPc("\r\nMessage: Mag Measure Task works well.\r\n");
-		if( osEventTimeout != osDelay(1000) ){
+		if( osOK != osMessagePut ( xQueueLogToPcHandle, (uint32_t)&pxTaskMagMeasureRunningMsg, 0 ) ){
+			Error_Handler();
+		}
+		if( osEventTimeout != osDelay(5000) ){
 //			Error_Handler();
 		}
 		#endif

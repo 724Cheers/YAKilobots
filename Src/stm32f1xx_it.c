@@ -41,6 +41,7 @@
 #include "usart.h"
 #include <stdbool.h>
 #include "semphr.h"
+#include "vTaskZigbeeHandler.h"
 
 extern osSemaphoreId xBinSemLogToPcIsOkHandle;
 extern osMessageQId xQueueLogToPcHandle;
@@ -333,13 +334,15 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle)
   */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
+	/* 停止DMA防止数据进来 */
+	HAL_UART_DMAPause(huart);
+	
 	huart->RxXferCount = huart->RxXferSize - huart->hdmarx->Instance->CNDTR % huart->RxXferSize;
-	if(&_ZigbeeUartHandle == huart){		
-		osSemaphoreWait(xBinSemZigbeeRecieveHandle, 0);
-		if( osOK != osSemaphoreRelease( xBinSemZigbeeRecieveHandle ) ){
-//			Error_Handler();
-		}
+	
+	if(_ZigbeeUartHandle == huart){
+		vZigbeeUart_RxCpltCallback();
 	}
+	HAL_UART_DMAResume(huart);
 }
 
 void HAL_UART_IdleCallback(UART_HandleTypeDef *huart)
@@ -352,24 +355,24 @@ void HAL_UART_IdleCallback(UART_HandleTypeDef *huart)
 	if((tmp_flag != RESET) && (tmp_it_source != RESET))
 	{
 		__HAL_UART_CLEAR_IDLEFLAG(huart);
+		/* 停止DMA防止数据进来 */
+		HAL_UART_DMAPause(huart);
+		
 		/* 判断缓冲区是否接收满 */
 		if(huart->hdmarx->Instance->CNDTR % huart->RxXferSize != 0){
-			/* 停止DMA防止数据进来 */
-			HAL_UART_DMAStop(huart);
 			/* 把接收到的数据数目写入huart->RxXferCount */
 			huart->RxXferCount = huart->RxXferSize - huart->hdmarx->Instance->CNDTR % huart->RxXferSize;
+			
 			/* 标记有数据待读取 */
-			if(&_ZigbeeUartHandle == huart){
-				if( osOK != osSemaphoreRelease( xBinSemZigbeeRecieveHandle ) ){
-//					Error_Handler();
-				}
+			if(_ZigbeeUartHandle == huart){
+				vZigbeeUart_IdleCallback();
 			}
-			/* 重启DMA */
-			HAL_UART_Receive_DMA(huart, pcZigbeeRxBuffer, _RxBufferSize);
+//			/* 重启DMA */
+//			HAL_UART_Receive_DMA(huart, pcZigbeeRxBuffer, _RxBufferSize);
+//			HAL_UART_DMAResume(huart);
+		}else{
+			HAL_UART_DMAResume(huart);
 		}
-		/* 清空UART_Rx忙碌标志 */
-		huart->State = HAL_UART_STATE_READY;
-
 	}
 }
 
